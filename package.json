@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
-    "bitcoinjs-lib": "^3.3.2"
+    "bitcoinjs-lib": "^3.3.2",
+    "blockchain.info": "^2.11.0"
   }
 }
