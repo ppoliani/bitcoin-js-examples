@@ -18,10 +18,7 @@ const createHDRootKey = mnemonic => {
   return getHDRoot(seed);
 }
 
-const createWalletFromXpub = () => {
-
-}
-
+// Export the xpub for the node the given path
 const exportXpub = rootKey => rootKey.derivePath(`m/44'/0'/0'`).neutered().toBase58()
 
 const importXpub = xpub => bitcoin.HDNode.fromBase58(xpub)

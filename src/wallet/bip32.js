@@ -1,5 +1,6 @@
 const assert = require('assert')
 const bip39 = require('bip39')
+const bitcoin = require('bitcoinjs-lib')
 const {increaseAddressIndex, getCurrentAddressIndex} = require('./addressDB')
 const {importXpub} = require('./HDWallet')
 
@@ -12,9 +13,14 @@ const getHDNodeAddress = hdNode =>  hdNode.getAddress();
 
 const createBip32Address = (rootKey, addressIndex) => {
   const hdNode = getHDNode(rootKey, addressIndex);
-  const address = getHDNodeAddress(hdNode);
+  return generateSegwitAddress(hdNode.keyPair.getPublicKeyBuffer())
+}
 
-  return address;
+const generateSegwitAddress = pubKey => {
+  const redeemScript = bitcoin.script.witnessPubKeyHash.output.encode(bitcoin.crypto.hash160(pubKey))
+  const scriptPubKey = bitcoin.script.scriptHash.output.encode(bitcoin.crypto.hash160(redeemScript))
+  
+  return bitcoin.address.fromOutputScript(scriptPubKey)
 }
 
 // Check for details https://github.com/bitcoinjs/bitcoinjs-lib/issues/1006
@@ -25,11 +31,8 @@ const xpubToAddress = (xpub, addressIndex = 0, isChange = 0) => {
   const txtPath = `${isChange}/${addressIndex}`;
   const child = rootKey.derivePath(txtPath);
   
-  // Note: getAddress() only returns a non-segwit address that starts with a 1 (or m/n in testnet)
-  // So to generate BIP49 addresses (P2WPKH-in-P2SH) you need to manually hash the public key
-  // and generate the scripts to hash for the P2SH.
-  return child.keyPair.getAddress();
-} 
+  return generateSegwitAddress(child.keyPair.getPublicKeyBuffer());
+}
 
 module.exports = {
   createBip32Address,
