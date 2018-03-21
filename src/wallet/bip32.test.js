@@ -1,9 +1,17 @@
 //const test = require('ava')
 const {partial} = require('../utils/fn')
-const {createBip32Address, xpubToAddress} = require('./bip32')
+const {createBip32Address, xpubToAddress, createMultisigFromXpub} = require('./bip32')
 const {createHDRootKey, exportXpub} = require('./HDWallet')
 
-const mnemonic = 'excess stem kitten win couch chief usage yard load noodle attack spy';
+const mnemonics = [
+  'excess stem kitten win couch chief usage yard load noodle attack spy',
+  'embark remember issue dad magnet beyond address ice edit artwork control amount',
+  'rack seven design spot erupt scan glass coconut update toe twice rally',
+  'drip ostrich flash hard sample public sorry powder name hammer chef slice',
+  'bulk wonder leaf license equal gold slam merge unable used safe ranch'
+];
+
+const rootKeys = mnemonics.map(createHDRootKey);
 
 const printAddresses = (createAddress, addressIndex = 0) => {
   // TODO: Add proper unit tests
@@ -13,15 +21,22 @@ const printAddresses = (createAddress, addressIndex = 0) => {
   console.log(`Address : m/44'/0'/0'/0/3`, createAddress(addressIndex++));
   console.log(`Address : m/44'/0'/0'/0/4`, createAddress(addressIndex++));
 
-  console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
+  console.log('=============================================================')
 }
 
+printAddresses(partial(createBip32Address, rootKeys[0]));
 
-const rootkey = createHDRootKey(mnemonic);
-printAddresses(partial(createBip32Address, createHDRootKey(mnemonic)));
+const xpubs = rootKeys.map(exportXpub);
 
-const xpub = exportXpub(rootkey);
+console.log(' xpub -------> ', xpubs[0])
+console.log('=============================================================')
 
-console.log('xpub -------> ', xpub)
+printAddresses(partial(xpubToAddress, xpubs[0]));
 
-printAddresses(partial(xpubToAddress, xpub));
+console.log('MultiSig addresses (3 of 5)')
+console.log('=============================================================')
+
+Array.from(new Array(5), (_, i) => {
+  console.log(`MultiSig at address index ${i}: `, createMultisigFromXpub(3, 5, xpubs, i))
+}) 
+

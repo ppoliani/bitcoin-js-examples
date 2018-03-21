@@ -23,6 +23,19 @@ const generateSegwitAddress = pubKey => {
   return bitcoin.address.fromOutputScript(scriptPubKey)
 }
 
+const createMultisigFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 0) => {
+  if (xpubs.length !== n) throw new Error('Missing keys')
+
+  const rootKeys = xpubs.map(importXpub);
+  const txtPath = `${isChange}/${addressIndex}`;
+  const pubKeys = rootKeys.map(rootKey => rootKey.derivePath(txtPath).keyPair.getPublicKeyBuffer());
+
+  const witnessScript = bitcoin.script.multisig.output.encode(m, pubKeys)
+  const scriptPubKey = bitcoin.script.witnessScriptHash.output.encode(bitcoin.crypto.sha256(witnessScript))
+  
+  return bitcoin.address.fromOutputScript(scriptPubKey)
+}
+
 // Check for details https://github.com/bitcoinjs/bitcoinjs-lib/issues/1006
 const xpubToAddress = (xpub, addressIndex = 0, isChange = 0) => {
   if (xpub === undefined) throw new Error('Need xpub')
@@ -36,5 +49,6 @@ const xpubToAddress = (xpub, addressIndex = 0, isChange = 0) => {
 
 module.exports = {
   createBip32Address,
-  xpubToAddress
+  xpubToAddress,
+  createMultisigFromXpub
 }
