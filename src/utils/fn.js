@@ -4,5 +4,6 @@ Function.prototype['∘'] = function(f){
 }
 
 const pipe = (...fns) => fns.reverse().reduce((res, fn) => fn(res));
+const partial = (fn, ...args) => (...restArgs) => fn.apply(this, args.concat(restArgs));
 
-module.exports = {pipe}
+module.exports = {pipe, partial}
