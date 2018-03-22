@@ -27,14 +27,14 @@ const printAddresses = (createAddress, addressIndex = 0) => {
   console.log('=============================================================')
 }
 
-printAddresses(partial(createBip32Address, rootKeys[0]));
+printAddresses(partial(createBip32Address, rootKeys[0], false));
 
 const xpubs = rootKeys.map(exportXpub)
 
 console.log(' xpubs -------> ', xpubs)
 console.log('=============================================================')
 
-printAddresses(partial(xpubToAddress, xpubs[0]))
+printAddresses(partial(xpubToAddress, xpubs[0], false))
 
 console.log('MultiSig addresses (3 of 5)')
 console.log('=============================================================')

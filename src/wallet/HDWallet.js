@@ -11,7 +11,7 @@ const validateMnemonic = mnemonic => {
   return mnemonic;
 }
 
-const generateSeed = mnemonic => bip39.mnemonicToSeed(mnemonic, 'electrum_password')
+const generateSeed = mnemonic => bip39.mnemonicToSeed(mnemonic, 'copay_password')
 
 const getHDRoot = seed => bitcoin.HDNode.fromSeedBuffer(seed, bitcoin.networks.testnet)
 

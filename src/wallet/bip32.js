@@ -4,15 +4,19 @@ const bitcoin = require('bitcoinjs-lib')
 const {increaseAddressIndex, getCurrentAddressIndex} = require('./addressDB')
 const {importXpub, path} = require('./HDWallet')
 
-const generatePath = (addressIndex = 0, change = 0) => `${path}/${change}/${addressIndex}`
-
-const getHDNode = (rootKey, addressIndex) => rootKey.derivePath(generatePath(addressIndex));
+const generatePath = (addressIndex = 0, isChange = 0) => `${path}/${isChange}/${addressIndex}`
+const getHDNode = (rootKey, addressIndex, isChange) => rootKey.derivePath(generatePath(addressIndex, isChange));
 const getHDNodeAddress = hdNode =>  hdNode.getAddress();
 
-const createBip32Address = (rootKey, addressIndex) => {
-  const hdNode = getHDNode(rootKey, addressIndex);
-  return generateSegwitAddress(hdNode.keyPair.getPublicKeyBuffer())
+const createBip32Address = (rootKey, isSegwit, addressIndex = 0, isChange = 0) => {
+  const hdNode = getHDNode(rootKey, addressIndex, isChange);
+
+  return isSegwit 
+    ? generateSegwitAddress(hdNode.keyPair.getPublicKeyBuffer())
+    : generateStandardAddress(hdNode)
 }
+
+const generateStandardAddress = hdNode => hdNode.getAddress();
 
 const generateSegwitAddress = pubKey => {
   const redeemScript = bitcoin.script.witnessPubKeyHash.output.encode(bitcoin.crypto.hash160(pubKey))
@@ -41,14 +45,16 @@ const createMultisigFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 0) => 
 }
 
 // Check for details https://github.com/bitcoinjs/bitcoinjs-lib/issues/1006
-const xpubToAddress = (xpub, addressIndex = 0, isChange = 0) => {
+const xpubToAddress = (xpub, isSegwit, addressIndex = 0, isChange = 0) => {
   if (xpub === undefined) throw new Error('Need xpub')
 
   const rootKey = importXpub(xpub);
   const txtPath = `${isChange}/${addressIndex}`;
   const child = rootKey.derivePath(txtPath);
   
-  return generateSegwitAddress(child.keyPair.getPublicKeyBuffer());
+  return isSegwit
+    ? generateSegwitAddress(child.keyPair.getPublicKeyBuffer())
+    : generateStandardAddress(child); 
 }
 
 module.exports = {
