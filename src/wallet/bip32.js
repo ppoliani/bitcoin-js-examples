@@ -56,9 +56,8 @@ const createMultisigFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 0) => 
 
   const redeemScript = bitcoin.script.multisig.output.encode(m, pubKeys);
   const scriptPubKey = bitcoin.script.scriptHash.output.encode(bitcoin.crypto.hash160(redeemScript));
-  return bitcoin.address.fromOutputScript(scriptPubKey);
-
-  // return Address.createMultisig(pubKeys, m, Networks.testnet).toString();
+  
+  return bitcoin.address.fromOutputScript(scriptPubKey, bitcoin.networks.testnet);
 }
 
 const getHDNodeFromXpub = (xpub, addressIndex = 0, isChange = 0) => {
