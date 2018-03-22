@@ -1,7 +1,13 @@
 //const test = require('ava')
 const {partial} = require('../utils/fn')
 const bip39 = require('bip39')
-const {createBip32Address, xpubToAddress, createMultisigFromXpub} = require('./bip32')
+const {
+  generateStandardAddress, 
+  generateSegwitAddress, 
+  xpubToStandardAddress, 
+  xpubToSegwitAddress, 
+  createMultisigFromXpub
+} = require('./bip32')
 const {createHDRootKey, exportXpub, generateSeed} = require('./HDWallet')
 
 const mnemonics = [
@@ -27,16 +33,16 @@ const printAddresses = (createAddress, addressIndex = 0) => {
   console.log('=============================================================')
 }
 
-printAddresses(partial(createBip32Address, rootKeys[0], false));
+printAddresses(partial(generateStandardAddress, rootKeys[0]));
 
 const xpubs = rootKeys.map(exportXpub)
 
 console.log(' xpubs -------> ', xpubs)
 console.log('=============================================================')
 
-printAddresses(partial(xpubToAddress, xpubs[0], false))
+printAddresses(partial(xpubToStandardAddress, xpubs[0]))
 
-console.log('MultiSig addresses (3 of 5)')
+console.log('MultiSig addresses (2 of 3)')
 console.log('=============================================================')
 
 Array.from(new Array(3), (_, i) => {

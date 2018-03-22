@@ -8,17 +8,15 @@ const generatePath = (addressIndex = 0, isChange = 0) => `${path}/${isChange}/${
 const getHDNode = (rootKey, addressIndex, isChange) => rootKey.derivePath(generatePath(addressIndex, isChange));
 const getHDNodeAddress = hdNode =>  hdNode.getAddress();
 
-const createBip32Address = (rootKey, isSegwit, addressIndex = 0, isChange = 0) => {
-  const hdNode = getHDNode(rootKey, addressIndex, isChange);
+const getAddress = hdNode => hdNode.getAddress()
 
-  return isSegwit 
-    ? generateSegwitAddress(hdNode.keyPair.getPublicKeyBuffer())
-    : generateStandardAddress(hdNode)
+const generateStandardAddress = (rootKey, addressIndex = 0, isChange = 0) => {
+  const hdNode = getHDNode(rootKey, addressIndex, isChange);
+  return getAddress(hdNode);
 }
 
-const generateStandardAddress = hdNode => hdNode.getAddress();
-
-const generateSegwitAddress = pubKey => {
+const generateSegwitAddress = hdNode => {
+  const pubKey = hdNode.keyPair.getPublicKeyBuffer()
   const redeemScript = bitcoin.script.witnessPubKeyHash.output.encode(bitcoin.crypto.hash160(pubKey))
   const scriptPubKey = bitcoin.script.scriptHash.output.encode(bitcoin.crypto.hash160(redeemScript))
   
@@ -44,21 +42,32 @@ const createMultisigFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 0) => 
   return bitcoin.address.fromOutputScript(scriptPubKey, bitcoin.networks.testnet)
 }
 
-// Check for details https://github.com/bitcoinjs/bitcoinjs-lib/issues/1006
-const xpubToAddress = (xpub, isSegwit, addressIndex = 0, isChange = 0) => {
+const getHDNodeFromXpub = (xpub, addressIndex = 0, isChange = 0) => {
   if (xpub === undefined) throw new Error('Need xpub')
 
   const rootKey = importXpub(xpub);
   const txtPath = `${isChange}/${addressIndex}`;
-  const child = rootKey.derivePath(txtPath);
   
-  return isSegwit
-    ? generateSegwitAddress(child.keyPair.getPublicKeyBuffer())
-    : generateStandardAddress(child); 
+  return rootKey.derivePath(txtPath);
+}
+
+// Check for details https://github.com/bitcoinjs/bitcoinjs-lib/issues/1006
+const xpubToStandardAddress = (rootKey, addressIndex = 0, isChange = 0) =>  {
+  const hdNode = getHDNodeFromXpub(rootKey, addressIndex, isChange);
+  return getAddress(hdNode);
+}
+
+const xpubToSegwitAddress = (xpub, addressIndex = 0, isChange = 0) => {
+  const child = getHDNodeFromXpub(xpub, addressIndex, isChange);
+  const pubKey = child.keyPair.getPublicKeyBuffer();
+
+  return generateSegwitAddress(pubKey);
 }
 
 module.exports = {
-  createBip32Address,
-  xpubToAddress,
+  generateStandardAddress,
+  generateSegwitAddress,
+  xpubToStandardAddress,
+  xpubToSegwitAddress,
   createMultisigFromXpub
 }
