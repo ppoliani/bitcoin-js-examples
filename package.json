@@ -10,6 +10,7 @@
     "bip32-utils": "^0.11.1",
     "bip39": "^2.5.0",
     "bitcoinjs-lib": "^3.3.2",
+    "bitcore-lib": "^0.15.0",
     "blockchain.info": "^2.11.0"
   },
   "devDependencies": {
