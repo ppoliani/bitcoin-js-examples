@@ -2,11 +2,9 @@ const assert = require('assert')
 const bip39 = require('bip39')
 const bitcoin = require('bitcoinjs-lib')
 const {increaseAddressIndex, getCurrentAddressIndex} = require('./addressDB')
-const {importXpub} = require('./HDWallet')
+const {importXpub, path} = require('./HDWallet')
 
-
-const path = `m/44'/0'/0'/0`;
-const generatePath = addressIndex => `${path}/${addressIndex}`
+const generatePath = (addressIndex = 0, change = 0) => `${path}/${change}/${addressIndex}`
 
 const getHDNode = (rootKey, addressIndex) => rootKey.derivePath(generatePath(addressIndex));
 const getHDNodeAddress = hdNode =>  hdNode.getAddress();
@@ -28,12 +26,18 @@ const createMultisigFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 0) => 
 
   const rootKeys = xpubs.map(importXpub);
   const txtPath = `${isChange}/${addressIndex}`;
-  const pubKeys = rootKeys.map(rootKey => rootKey.derivePath(txtPath).keyPair.getPublicKeyBuffer());
 
-  const witnessScript = bitcoin.script.multisig.output.encode(m, pubKeys)
-  const scriptPubKey = bitcoin.script.witnessScriptHash.output.encode(bitcoin.crypto.sha256(witnessScript))
+  const pubKeys = rootKeys
+    .map(rootKey => rootKey.derivePath(txtPath))
+    .sort((derivedKeyA, derivedKeyB) => derivedKeyB.getIdentifier().compare(derivedKeyA.getIdentifier()))
+    .map(derivedKey => derivedKey.keyPair.getPublicKeyBuffer())
+
+  const witnessScript = bitcoin.script.multisig.output.encode(m, pubKeys);
+  const redeemScript = bitcoin.script.witnessScriptHash.output.encode(bitcoin.crypto.sha256(witnessScript))
+  const scriptPubKey = bitcoin.script.scriptHash.output.encode(bitcoin.crypto.hash160(redeemScript))
   
-  return bitcoin.address.fromOutputScript(scriptPubKey)
+
+  return bitcoin.address.fromOutputScript(scriptPubKey, bitcoin.networks.testnet)
 }
 
 // Check for details https://github.com/bitcoinjs/bitcoinjs-lib/issues/1006

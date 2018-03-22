@@ -1,17 +1,20 @@
 //const test = require('ava')
 const {partial} = require('../utils/fn')
+const bip39 = require('bip39')
 const {createBip32Address, xpubToAddress, createMultisigFromXpub} = require('./bip32')
-const {createHDRootKey, exportXpub} = require('./HDWallet')
+const {createHDRootKey, exportXpub, generateSeed} = require('./HDWallet')
 
 const mnemonics = [
-  'excess stem kitten win couch chief usage yard load noodle attack spy',
-  'embark remember issue dad magnet beyond address ice edit artwork control amount',
-  'rack seven design spot erupt scan glass coconut update toe twice rally',
-  'drip ostrich flash hard sample public sorry powder name hammer chef slice',
-  'bulk wonder leaf license equal gold slam merge unable used safe ranch'
+  'nephew surface exist stool into grief flush garden matrix squirrel split strategy',
+  'sword moon must hair guess oblige car unfold media defy pen spoil',
+  'inch enable title pepper already orbit tissue field edit dynamic chaos bright'
 ];
 
 const rootKeys = mnemonics.map(createHDRootKey);
+
+console.log(' rootKeys -------> ')
+rootKeys.forEach(rootKey => console.log(rootKey.keyPair.d.toHex()))
+console.log('=============================================================')
 
 const printAddresses = (createAddress, addressIndex = 0) => {
   // TODO: Add proper unit tests
@@ -26,17 +29,17 @@ const printAddresses = (createAddress, addressIndex = 0) => {
 
 printAddresses(partial(createBip32Address, rootKeys[0]));
 
-const xpubs = rootKeys.map(exportXpub);
+const xpubs = rootKeys.map(exportXpub)
 
-console.log(' xpub -------> ', xpubs[0])
+console.log(' xpubs -------> ', xpubs)
 console.log('=============================================================')
 
-printAddresses(partial(xpubToAddress, xpubs[0]));
+printAddresses(partial(xpubToAddress, xpubs[0]))
 
 console.log('MultiSig addresses (3 of 5)')
 console.log('=============================================================')
 
-Array.from(new Array(5), (_, i) => {
-  console.log(`MultiSig at address index ${i}: `, createMultisigFromXpub(3, 5, xpubs, i))
+Array.from(new Array(3), (_, i) => {
+  console.log(`MultiSig at address index ${i}: `, createMultisigFromXpub(2, 3, xpubs, i))
 }) 
 
