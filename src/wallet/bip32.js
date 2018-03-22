@@ -2,6 +2,7 @@ const assert = require('assert')
 const bip39 = require('bip39')
 const bitcoin = require('bitcoinjs-lib')
 const {Address, Networks} = require('bitcore-lib')
+const sortBy = require('lodash.sortby')
 const {increaseAddressIndex, getCurrentAddressIndex} = require('./addressDB')
 const {importXpub, path} = require('./HDWallet')
 
@@ -31,13 +32,13 @@ const getMultisigPubKeys = (m, n, xpubs, addressIndex = 0, isChange = 0) => {
   const rootKeys = xpubs.map(importXpub);
   const txtPath = `${isChange}/${addressIndex}`;
 
-  const pubKeys = rootKeys
+  const publicKeys = rootKeys
     .map(rootKey => rootKey.derivePath(txtPath))
-    .map(derivedKey => derivedKey.keyPair.getPublicKeyBuffer())
+    .map(derivedKey => derivedKey.keyPair.getPublicKeyBuffer());
 
-    const [a, b, c] = pubKeys;
+  const sorted = sortBy(publicKeys, key => key.toString('hex'));
 
-    return [a, b, c];
+  return sorted;
 }
 
 const createMultisigSegwitFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 0) => {
@@ -52,7 +53,12 @@ const createMultisigSegwitFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 
 
 const createMultisigFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 0) => {
   const pubKeys = getMultisigPubKeys(m, n, xpubs, addressIndex, isChange);
-  return Address.createMultisig(pubKeys, m, Networks.testnet).toString();
+
+  const redeemScript = bitcoin.script.multisig.output.encode(m, pubKeys);
+  const scriptPubKey = bitcoin.script.scriptHash.output.encode(bitcoin.crypto.hash160(redeemScript));
+  return bitcoin.address.fromOutputScript(scriptPubKey);
+
+  // return Address.createMultisig(pubKeys, m, Networks.testnet).toString();
 }
 
 const getHDNodeFromXpub = (xpub, addressIndex = 0, isChange = 0) => {
