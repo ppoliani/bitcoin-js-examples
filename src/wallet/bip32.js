@@ -1,7 +1,6 @@
 const assert = require('assert')
 const bip39 = require('bip39')
 const bitcoin = require('bitcoinjs-lib')
-const {Address, Networks} = require('bitcore-lib')
 const sortBy = require('lodash.sortby')
 const {increaseAddressIndex, getCurrentAddressIndex} = require('./addressDB')
 const {importXpub, path} = require('./HDWallet')
