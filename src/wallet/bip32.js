@@ -2,10 +2,13 @@ const assert = require('assert')
 const bip39 = require('bip39')
 const bitcoin = require('bitcoinjs-lib')
 const sortBy = require('lodash.sortby')
+const {getNetwork} = require('../networks')
 const {increaseAddressIndex, getCurrentAddressIndex} = require('./addressDB')
-const {importXpub, path} = require('./HDWallet')
+const {importXpub} = require('./HDWallet')
+const {HD_PATH} = require('../constants')
+const {getUnspentOutputs} = require('../explorer')
 
-const generatePath = (addressIndex = 0, isChange = 0) => `${path}/${isChange}/${addressIndex}`
+const generatePath = (addressIndex = 0, isChange = 0) => `${HD_PATH}/${isChange}/${addressIndex}`
 const getHDNode = (rootKey, addressIndex, isChange) => rootKey.derivePath(generatePath(addressIndex, isChange));
 const getHDNodeAddress = hdNode =>  hdNode.getAddress();
 
@@ -21,9 +24,8 @@ const generateSegwitAddress = hdNode => {
   const redeemScript = bitcoin.script.witnessPubKeyHash.output.encode(bitcoin.crypto.hash160(pubKey))
   const scriptPubKey = bitcoin.script.scriptHash.output.encode(bitcoin.crypto.hash160(redeemScript))
   
-  return bitcoin.address.fromOutputScript(scriptPubKey,  bitcoin.networks.testnet);
+  return bitcoin.address.fromOutputScript(scriptPubKey, getNetwork());
 }
-
 
 const getMultisigPubKeys = (m, n, xpubs, addressIndex = 0, isChange = 0) => {
   if (xpubs.length !== n) throw new Error('Missing keys')
@@ -47,7 +49,7 @@ const createMultisigSegwitFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 
   const scriptPubKey = bitcoin.script.scriptHash.output.encode(bitcoin.crypto.hash160(redeemScript))
   
 
-  return bitcoin.address.fromOutputScript(scriptPubKey, bitcoin.networks.testnet)
+  return bitcoin.address.fromOutputScript(scriptPubKey, getNetwork())
 }
 
 const createMultisigFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 0) => {
@@ -56,7 +58,7 @@ const createMultisigFromXpub = (m, n, xpubs, addressIndex = 0, isChange = 0) => 
   const redeemScript = bitcoin.script.multisig.output.encode(m, pubKeys);
   const scriptPubKey = bitcoin.script.scriptHash.output.encode(bitcoin.crypto.hash160(redeemScript));
   
-  return bitcoin.address.fromOutputScript(scriptPubKey, bitcoin.networks.testnet);
+  return bitcoin.address.fromOutputScript(scriptPubKey, getNetwork());
 }
 
 const getHDNodeFromXpub = (xpub, addressIndex = 0, isChange = 0) => {
@@ -80,7 +82,22 @@ const xpubToSegwitAddress = (xpub, addressIndex = 0, isChange = 0) => {
   return generateSegwitAddress(child);
 }
 
+const getAddressBalance = async address => {
+  return await getUnspentOutputs(address);
+}
+
+
+const getHDWalletBalance = async xpub => {
+  let addressIndex = 0;
+  const address = xpubToStandardAddress(xpub, addressIndex);
+  const balance = await getAddressBalance(address);
+
+  console.log('>>>>>', balance)
+}
+
 module.exports = {
+  getBalance,
+  getHDWalletBalance,
   generateStandardAddress,
   generateSegwitAddress,
   xpubToStandardAddress,

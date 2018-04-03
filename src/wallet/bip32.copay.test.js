@@ -32,3 +32,6 @@ console.log('=============================================================')
 Array.from(new Array(10), (_, i) => {
   console.log(`MultiSig at address index ${i}: `, createMultisigFromXpub(2, 3, copayXpubs, i))
 }) 
+
+
+console.log(`Tim's balance`)
