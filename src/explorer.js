@@ -1,14 +1,23 @@
 const {promisify} = require('util')
 const Socket = require('blockchain.info/Socket')
 const blockexplorer = require('blockchain.info/blockexplorer')
-const {getMainnet} = require('./networks')
+const {getMainnet, isMainnet, isTestnet} = require('./networks')
 
-const getBlockexplorer = (network = getMainnet()) => blockexplorer.usingNetwork(network)
-const getBlockChainSocket = (network = getMainnet()) => new Socket({network: network});
+const getNetwork = network => {
+  if(isMainnet(network)) return 0;
+  if(isTestnet(network)) return 3;
 
-const getUnspentOutputs = (address, network) => {
+  throw new Error('Network not available');
+}
+
+const getBlockexplorer = (network = getMainnet()) => blockexplorer.usingNetwork(getNetwork(network))
+const getBlockChainSocket = (network = getMainnet()) => new Socket({network: getNetwork(network)});
+
+const getUTXOs = async (address, network) => {
   const explorer = getBlockexplorer(network);
-  return promisify(explorer.getUnspentOutputs)(address);
+  const result = await explorer.getUTXOs(address);
+
+  return result.unspent_outputs
 }
 
 const listenOnAddresses = (addresses, network) => {
@@ -29,7 +38,10 @@ const listenOnAddresses = (addresses, network) => {
   }, options); 
 }
 
+const getValueFromUTXO = utxo => utxo.value;
+
 module.exports = {
-  getUnspentOutputs,
-  listenOnAddresses
+  getUTXOs,
+  listenOnAddresses,
+  getValueFromUTXO
 }

@@ -3,7 +3,7 @@ const bip39 = require('bip39')
 const bitcoin = require('bitcoinjs-lib')
 const bip32utils = require('bip32-utils')
 const {getNetwork} = require('../networks')
-const {HD_PATH} = require('../constants')
+const {getPath} = require('../constants')
 
 const validateMnemonic = mnemonic => {
   assert.ok(bip39.validateMnemonic(mnemonic))
@@ -18,7 +18,7 @@ const createHDRootKey = (getHDRoot) ['∘'] (generateSeed)
 
 // Export the xpub for the node the given path
 // export at level 3
-const exportXpub = rootKey => rootKey.derivePath(HD_PATH).neutered().toBase58()
+const exportXpub = rootKey => rootKey.derivePath(getPath()).neutered().toBase58()
 
 const importXpub = xpub => bitcoin.HDNode.fromBase58(xpub, getNetwork())
 

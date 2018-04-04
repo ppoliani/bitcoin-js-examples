@@ -5,10 +5,10 @@ const sortBy = require('lodash.sortby')
 const {getNetwork} = require('../networks')
 const {increaseAddressIndex, getCurrentAddressIndex} = require('./addressDB')
 const {importXpub} = require('./HDWallet')
-const {HD_PATH} = require('../constants')
-const {getUnspentOutputs} = require('../explorer')
+const {getPath} = require('../constants')
+const {getUTXOs, getValueFromUTXO} = require('../explorer')
 
-const generatePath = (addressIndex = 0, isChange = 0) => `${HD_PATH}/${isChange}/${addressIndex}`
+const generatePath = (addressIndex = 0, isChange = 0) => `${getPath()}/${isChange}/${addressIndex}`
 const getHDNode = (rootKey, addressIndex, isChange) => rootKey.derivePath(generatePath(addressIndex, isChange));
 const getHDNodeAddress = hdNode =>  hdNode.getAddress();
 
@@ -83,20 +83,22 @@ const xpubToSegwitAddress = (xpub, addressIndex = 0, isChange = 0) => {
 }
 
 const getAddressBalance = async address => {
-  return await getUnspentOutputs(address);
+  const UTXOs = await getUTXOs(address);
+  return UTXOs.reduce((sum, utxo) => sum + getValueFromUTXO(utxo), 0);
 }
 
 
 const getHDWalletBalance = async xpub => {
   let addressIndex = 0;
-  const address = xpubToStandardAddress(xpub, addressIndex);
+  const address = xpubToSegwitAddress(xpub, addressIndex);
   const balance = await getAddressBalance(address);
 
-  console.log('>>>>>', balance)
+  // create a segwit and legacy address for each index
+
+  return balance;
 }
 
 module.exports = {
-  getBalance,
   getHDWalletBalance,
   generateStandardAddress,
   generateSegwitAddress,
